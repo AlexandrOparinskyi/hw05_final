@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block title %}Об авторе проекта{% endblock %}
+
+{% block content %}
+  <div class="text-center">
+    <h1>Привет, я автор</h1>
+    <img src="{% static 'img/me.png' %}">
+    <h3>
+      Рад вас здесь видеть
+    </h3>
+  </div>
+{% endblock %}
