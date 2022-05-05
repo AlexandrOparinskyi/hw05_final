@@ -182,10 +182,12 @@ class CachePostsTest(TestCase):
         self.authorized_client.force_login(self.user)
 
     def test_add_post_in_cache(self):
-        response = self.authorized_client.get(reverse('posts:index'))
+        response_1 = self.authorized_client.get(reverse('posts:index'))
         self.post.delete()
-        self.assertIn(self.post, response.content)
+        response_2 = self.authorized_client.get(reverse('posts:index'))
+        self.assertEqual(response_1.content, response_2.content)
         cache.clear()
-        self.assertNotIn(self.post, response.content)
+        response_3 = self.authorized_client.get(reverse('posts:index'))
+        self.assertNotEqual(response_2.content, response_3.content)
 
 
