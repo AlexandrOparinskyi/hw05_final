@@ -4,7 +4,7 @@ from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import CommentForm, PostForm
-from .models import Comment, Group, Post, User
+from .models import Comment, Follow, Group, Post, User
 
 
 def paginate_queryset(request, post_list):
@@ -34,9 +34,17 @@ def group_list(request, slug):
 def profile(request, username):
     author = get_object_or_404(User, username=username)
     post_list = author.posts.select_related('group')
+    if request.user.is_authenticated:
+        following = Follow.objects.filter(
+            user=request.user,
+            author=get_object_or_404(User, username=username),
+        )
+    else:
+        following = False
     context = {
         'page_obj': paginate_queryset(request, post_list),
         'author': author,
+        'following': following,
     }
     return render(request, 'posts/profile.html', context)
 
@@ -93,3 +101,37 @@ def add_comment(request, post_id):
         comment.post = post
         comment.save()
     return redirect('posts:post_detail', post_id=post_id)
+
+
+@login_required
+def follow_index(request):
+    page_obj = (
+        Post.objects.select_related()
+        .filter(author__following__user=request.user)
+    )
+    context = {
+        'page_obj': paginate_queryset(request, page_obj)
+    }
+    return render(request, 'posts/follow.html', context)
+
+
+@login_required
+def profile_follow(request, username):
+    Follow.objects.create(
+        user=request.user,
+        author=get_object_or_404(User, username=username),
+    )
+    return redirect('posts:profile', username=username)
+
+
+@login_required
+def profile_unfollow(request, username):
+    if (Follow.objects.filter(
+        user=request.user,
+        author=get_object_or_404(User, username=username),
+    ).exists()):
+        Follow.objects.filter(
+            user=request.user,
+            author=get_object_or_404(User, username=username),
+        ).delete()
+    return redirect('posts:profile', username=username)

@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from ..models import Group, Post
+from ..models import Follow, Group, Post
 
 User = get_user_model()
 
@@ -169,4 +169,33 @@ class TestPaginatorView(TestCase):
         for page, count_post in paginator_page.items():
             with self.subTest(count_post=count_post):
                 response = self.guest.get(page)
-                self.assertEqual(len(response.context['page_obj']), count_post)
+                self.assertEqual(
+                    len(response.context['page_obj']), count_post
+                )
+
+
+class FollowingTest(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.author = User.objects.create_user(username='author')
+        cls.user = User.objects.create_user(username='user')
+
+    def setUp(self):
+        self.auth_author = Client()
+        self.auth_author.force_login(user=self.author)
+        self.auth_user = Client()
+        self.auth_user.force_login(user=self.user)
+
+    def test_user_following_author(self):
+        """Проверка подписки на автора"""
+        follow_count = Follow.objects.count()
+        new_follower = Follow.objects.create(
+            user=self.user,
+            author=self.author,
+        )
+        self.auth_user.post(
+            reverse('posts:profile_follow', args=[self.author]),
+            data=new_follower,
+        )
+        self.assertEqual(Follow.objects.count(), follow_count + 1)

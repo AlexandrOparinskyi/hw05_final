@@ -26,24 +26,28 @@ class PostURLTests(TestCase):
         cls.status_url_names_guest = {
             '/': HTTPStatus.OK,
             '/group/test-slug/': HTTPStatus.OK,
-            '/profile/auth/': HTTPStatus.OK,
             '/posts/1/': HTTPStatus.OK,
+            '/profile/auth/': HTTPStatus.OK,
             '/unknown_page/': HTTPStatus.NOT_FOUND,
         }
         cls.status_url_names_auth = {
             '/posts/1/edit/': HTTPStatus.OK,
             '/create/': HTTPStatus.OK,
+            '/follow/': HTTPStatus.OK,
+            '/profile/auth/': HTTPStatus.OK,
             '/unknown_page/': HTTPStatus.NOT_FOUND,
         }
         cls.templates_url_names_guest = {
             'posts/index.html': '/',
             'posts/group_list.html': '/group/test-slug/',
-            'posts/profile.html': '/profile/auth/',
             'posts/post_detail.html': '/posts/1/',
+            'posts/profile.html': '/profile/auth/',
         }
         cls.templates_url_names_auth = {
             '/create/': 'posts/create_post.html',
+            '/follow/': 'posts/follow.html',
             '/posts/1/edit/': 'posts/create_post.html',
+            '/profile/auth/': 'posts/profile.html',
         }
 
     def setUp(self):

@@ -77,3 +77,22 @@ class Comment(models.Model):
     )
     text = models.TextField('Текст комментария')
     created = models.DateTimeField(auto_now_add=True)
+
+
+class Follow(models.Model):
+    user = models.ForeignKey(
+        User,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name='follower',
+        verbose_name='Подписчик',
+    )
+    author = models.ForeignKey(
+        User,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name='following',
+        verbose_name='Автор информации',
+    )
