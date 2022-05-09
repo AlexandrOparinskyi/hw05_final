@@ -21,10 +21,5 @@ class GroupAdmin(admin.ModelAdmin):
     empty_value_display = '-пусто-'
 
 
-class FollowAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'user', 'author',)
-
-
 admin.site.register(Post, PostAdmin)
 admin.site.register(Group, GroupAdmin)
-admin.site.register(Follow, FollowAdmin)
