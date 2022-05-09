@@ -7,6 +7,7 @@
 {% block content %}
   <h3>Всего постов: {{ author.posts.count }}</h3>
   <br>
+  {% if request.user != author %}
   <div class="mb-5">
   {% if following %}
     <a
@@ -24,6 +25,7 @@
       </a>
   {% endif %}
   </div>
+  {% endif %}
   {% for post in page_obj %}
     {% include 'posts/post_card.html' %}
   {% endfor %}

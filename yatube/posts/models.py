@@ -84,7 +84,7 @@ class Follow(models.Model):
         User,
         blank=True,
         null=True,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         related_name='follower',
         verbose_name='Подписчик',
     )
@@ -92,7 +92,7 @@ class Follow(models.Model):
         User,
         blank=True,
         null=True,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         related_name='following',
         verbose_name='Автор информации',
     )

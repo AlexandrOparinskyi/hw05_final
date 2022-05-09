@@ -210,6 +210,18 @@ class FollowingTest(TestCase):
         )
         self.assertEqual(Follow.objects.count(), follow_count)
 
+    def test_author_follow_on_author(self):
+        """Автор не может подписаться на себя самого"""
+        follow_count = Follow.objects.count()
+        self.auth_author.post(
+            reverse('posts:profile_follow', args=[self.author]),
+            data={
+                'user': self.author,
+                'author': self.author,
+            },
+        )
+        self.assertEqual(Follow.objects.count(), follow_count)
+
     def test_new_posts_in_follow(self):
         """Проверка появление новой записи у подписанных пользователей"""
         """Отсутствие новых записей у неподписанных пользователей"""
