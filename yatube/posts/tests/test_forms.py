@@ -189,5 +189,3 @@ class CachePostsTest(TestCase):
         cache.clear()
         response_3 = self.authorized_client.get(reverse('posts:index'))
         self.assertNotEqual(response_2.content, response_3.content)
-
-
