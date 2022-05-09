@@ -180,22 +180,80 @@ class FollowingTest(TestCase):
         super().setUpClass()
         cls.author = User.objects.create_user(username='author')
         cls.user = User.objects.create_user(username='user')
+        cls.bad_user = User.objects.create_user(username='bad_user')
+        cls.new_follower = {
+            'user': cls.author,
+            'author': cls.user,
+        }
 
     def setUp(self):
         self.auth_author = Client()
         self.auth_author.force_login(user=self.author)
         self.auth_user = Client()
         self.auth_user.force_login(user=self.user)
+        self.auth_bad_user = Client()
+        self.auth_bad_user.force_login(user=self.bad_user)
 
     def test_user_following_author(self):
-        """Проверка подписки на автора"""
+        """Проверка подписки/отписки на автора"""
         follow_count = Follow.objects.count()
-        new_follower = Follow.objects.create(
-            user=self.user,
-            author=self.author,
-        )
         self.auth_user.post(
             reverse('posts:profile_follow', args=[self.author]),
-            data=new_follower,
+            data=self.new_follower,
+            follow=True,
         )
         self.assertEqual(Follow.objects.count(), follow_count + 1)
+        self.auth_user.post(
+            reverse('posts:profile_unfollow', args=[self.author]),
+            cleaned_data=self.new_follower,
+            follow=True,
+        )
+        self.assertEqual(Follow.objects.count(), follow_count)
+
+    def test_new_posts_in_follow(self):
+        """Проверка появление новой записи у подписанных пользователей"""
+        """Отсутствие новых записей у неподписанных пользователей"""
+        posts_count = Post.objects.count()
+        self.auth_user.post(
+            reverse('posts:profile_follow', args=[self.author]),
+            data=self.new_follower,
+            follow=True,
+        )
+        response = self.auth_user.get(
+            reverse(
+                'posts:follow_index'
+            )
+        )
+        follower_post_count = len(response.context['page_obj'].object_list)
+        response_non_follower = self.auth_bad_user.get(
+            reverse(
+                'posts:follow_index'
+            )
+        )
+        non_follower_post_count = len(
+            response_non_follower.context['page_obj'].object_list)
+        self.auth_author.post(
+            reverse('posts:post_create'),
+            data={'text': 'Author created new post.'},
+            follow=True
+        )
+        new_response = self.auth_user.get(
+            reverse(
+                'posts:follow_index'
+            )
+        )
+        follower_new_post_count = len(
+            new_response.context['page_obj'].object_list
+        )
+        new_response_non_follower = self.auth_bad_user.get(
+            reverse(
+                'posts:follow_index'
+            )
+        )
+        non_follower_new_post_count = len(
+            new_response_non_follower.context['page_obj'].object_list
+        )
+        self.assertEqual(posts_count, follower_post_count)
+        self.assertEqual(posts_count + 1, follower_new_post_count)
+        self.assertEqual(posts_count, non_follower_post_count)
+        self.assertEqual(non_follower_post_count, non_follower_new_post_count)
