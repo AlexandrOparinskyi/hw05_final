@@ -37,8 +37,8 @@ def profile(request, username):
     if request.user.is_authenticated:
         following = Follow.objects.filter(
             user=request.user,
-            author=get_object_or_404(User, username=username),
-        )
+            author=author,
+        ).exists()
     else:
         following = False
     context = {
@@ -119,7 +119,7 @@ def follow_index(request):
 def profile_follow(request, username):
     author = get_object_or_404(User, username=username)
     if request.user != author:
-        Follow.objects.create(
+        Follow.objects.get_or_create(
             user=request.user,
             author=author,
         )
