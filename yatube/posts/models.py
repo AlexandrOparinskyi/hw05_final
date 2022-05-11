@@ -61,17 +61,15 @@ class Post(models.Model):
 class Comment(models.Model):
     post = models.ForeignKey(
         Post,
-        blank=True,
         null=True,
+        blank=True,
         on_delete=models.SET_NULL,
         related_name='comments',
         verbose_name='Пост для комментария'
     )
     author = models.ForeignKey(
         User,
-        blank=True,
-        null=True,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         related_name='comments',
         verbose_name='Автор комментария'
     )
@@ -82,17 +80,20 @@ class Comment(models.Model):
 class Follow(models.Model):
     user = models.ForeignKey(
         User,
-        blank=True,
-        null=True,
         on_delete=models.CASCADE,
         related_name='follower',
         verbose_name='Подписчик',
     )
     author = models.ForeignKey(
         User,
-        blank=True,
-        null=True,
         on_delete=models.CASCADE,
         related_name='following',
         verbose_name='Автор информации',
     )
+
+    class Meta:
+        constraints = [models.UniqueConstraint(
+            fields=('user', 'author'),
+            name='unique_follow',
+            )
+        ]
