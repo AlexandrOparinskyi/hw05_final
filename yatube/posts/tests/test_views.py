@@ -234,8 +234,9 @@ class FollowingTest(TestCase):
         self.assertEqual(Follow.objects.count(), follow_count)
 
     def test_new_posts_in_follow(self):
-        """Проверка появление новой записи у подписанных пользователей"""
-        """Отсутствие новых записей у неподписанных пользователей"""
+        """Появление новой записи у подписанных пользователей
+        Отсутствие новых записей у неподписанных пользователей
+        """
         posts_count = Post.objects.count()
         self.auth_user.post(
             reverse('posts:profile_follow', args=[self.author]),
