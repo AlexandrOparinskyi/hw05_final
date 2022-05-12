@@ -28,24 +28,3 @@ class StaticURLTest(TestCase):
             with self.subTest(address=address):
                 response = self.guest.get(address)
                 self.assertTemplateUsed(response, template)
-
-
-class StaticViewsTest(TestCase):
-    def setUp(self):
-        self.guest = Client()
-
-    def test_about_author_correct_name(self):
-        response = self.guest.get(reverse('about:author'))
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-
-    def test_about_tech_correct_name(self):
-        response = self.guest.get(reverse('about:tech'))
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-
-    def test_about_author_correct_template(self):
-        response = self.guest.get(reverse('about:author'))
-        self.assertTemplateUsed(response, 'about/author.html')
-
-    def test_about_tech_correct_template(self):
-        response = self.guest.get(reverse('about:tech'))
-        self.assertTemplateUsed(response, 'about/tech.html')

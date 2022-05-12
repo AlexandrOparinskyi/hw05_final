@@ -34,13 +34,12 @@ def group_list(request, slug):
 def profile(request, username):
     author = get_object_or_404(User, username=username)
     post_list = author.posts.select_related('group')
+    following = False
     if request.user.is_authenticated:
         following = Follow.objects.filter(
             user=request.user,
             author=author,
         ).exists()
-    else:
-        following = False
     context = {
         'page_obj': paginate_queryset(request, post_list),
         'author': author,
@@ -128,12 +127,8 @@ def profile_follow(request, username):
 
 @login_required
 def profile_unfollow(request, username):
-    if (Follow.objects.filter(
+    Follow.objects.filter(
         user=request.user,
-        author=get_object_or_404(User, username=username),
-    ).exists()):
-        Follow.objects.filter(
-            user=request.user,
-            author=get_object_or_404(User, username=username),
-        ).delete()
+        author__username=username,
+    ).delete()
     return redirect('posts:profile', username=username)

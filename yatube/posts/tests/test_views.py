@@ -180,22 +180,29 @@ class FollowingTest(TestCase):
         super().setUpClass()
         cls.author = User.objects.create_user(username='author')
         cls.user = User.objects.create_user(username='user')
+        cls.user_1 = User.objects.create_user(username='_1')
         cls.bad_user = User.objects.create_user(username='bad_user')
         cls.new_follower = {
             'user': cls.author,
             'author': cls.user,
         }
+        cls.follow = Follow.objects.create(
+            user=cls.user_1,
+            author=cls.author,
+        )
 
     def setUp(self):
         self.auth_author = Client()
         self.auth_author.force_login(user=self.author)
+        self.auth_user_1 = Client()
+        self.auth_user_1.force_login(user=self.user_1)
         self.auth_user = Client()
         self.auth_user.force_login(user=self.user)
         self.auth_bad_user = Client()
         self.auth_bad_user.force_login(user=self.bad_user)
 
     def test_user_following_author(self):
-        """Проверка подписки/отписки на автора"""
+        """Проверка подписки автора"""
         follow_count = Follow.objects.count()
         self.auth_user.post(
             reverse('posts:profile_follow', args=[self.author]),
@@ -203,12 +210,16 @@ class FollowingTest(TestCase):
             follow=True,
         )
         self.assertEqual(Follow.objects.count(), follow_count + 1)
-        self.auth_user.post(
+
+    def test_user_unfollowing_author(self):
+        """Проверка отписки от автора"""
+        follow_count = Follow.objects.count()
+        self.auth_user_1.post(
             reverse('posts:profile_unfollow', args=[self.author]),
             cleaned_data=self.new_follower,
             follow=True,
         )
-        self.assertEqual(Follow.objects.count(), follow_count)
+        self.assertEqual(Follow.objects.count(), follow_count - 1)
 
     def test_author_follow_on_author(self):
         """Автор не может подписаться на себя самого"""
