@@ -31,6 +31,35 @@ class PostFormTest(TestCase):
             group=cls.group,
             author=cls.user,
         )
+        small_gif = (
+            b'\x47\x49\x46\x38\x39\x61\x02\x00'
+            b'\x01\x00\x80\x00\x00\x00\x00\x00'
+            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
+            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
+            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
+            b'\x0A\x00\x3B'
+        )
+        uploaded = SimpleUploadedFile(
+            name='small.gif',
+            content=small_gif,
+            content_type='image/gif'
+        )
+        cls.new_post = {
+            'text': 'test-text add',
+            'group': cls.group.id,
+            'image': uploaded,
+        }
+        cls.new_guest_post = {
+            'text': 'test_guest',
+            'group': cls.group.id,
+        }
+        cls.no_valid__post = {
+            'text': '',
+        }
+        cls.edit_post = {
+            'text': 'test-text add',
+            'group': '1',
+        }
 
     @classmethod
     def tearDownClass(cls):
@@ -45,27 +74,9 @@ class PostFormTest(TestCase):
 
     def test_post_create(self):
         """Форма заполняется"""
-        small_gif = (
-            b'\x47\x49\x46\x38\x39\x61\x02\x00'
-            b'\x01\x00\x80\x00\x00\x00\x00\x00'
-            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
-            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
-            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
-            b'\x0A\x00\x3B'
-        )
-        uploaded = SimpleUploadedFile(
-            name='small.gif',
-            content=small_gif,
-            content_type='image/gif'
-        )
-        new_post = {
-            'text': 'test-text add',
-            'group': self.group.id,
-            'image': uploaded,
-        }
         response = self.authorized_client.post(
             reverse('posts:post_create'),
-            data=new_post,
+            data=self.new_post,
             follow=True)
         self.assertEqual(Post.objects.count(), self.post_count + 1)
         self.assertRedirects(
@@ -79,37 +90,29 @@ class PostFormTest(TestCase):
         )
 
     def test_guest_create_post(self):
-        new_post = {
-            'text': 'test_guest',
-            'group': '1',
-        }
+        """Гость не может создать пост"""
         response = self.guest.post(
             reverse('posts:post_create'),
-            data=new_post,
+            data=self.new_guest_post,
             fallow=True,
         )
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
         self.assertEqual(Post.objects.count(), self.post_count)
 
     def test_is_not_valid_form_post(self):
-        new_post = {
-            'text': '',
-        }
+        """Пост не создается, если форма не валидна"""
         self.authorized_client.post(
             reverse('posts:post_create'),
-            data=new_post,
+            data=self.no_valid__post,
             follow=True,
         )
         self.assertEqual(Post.objects.count(), self.post_count)
 
     def test_post_edit(self):
-        edit_post = {
-            'text': 'test-text add',
-            'group': '1',
-        }
+        """Редактирование поста"""
         response = self.authorized_client.post(
             reverse('posts:post_edit', args=[self.post.id]),
-            data=edit_post,
+            data=self.edit_post,
             follow=True,
         )
         self.assertRedirects(
@@ -134,37 +137,33 @@ class PostsCommentsTest(TestCase):
         cls.comment = Comment.objects.create(
             text='test-text'
         )
+        cls.new_comment = {
+            'text': 'text-test',
+        }
 
     def setUp(self):
         self.guest = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
+        self.comment_count = Comment.objects.count()
 
     def test_guest_add_posts_comment(self):
         """Проверка создания комментария гостем"""
-        comment_count = Comment.objects.count()
-        new_comment = {
-            'text': 'text-test',
-        }
         self.guest.post(
             reverse('posts:add_comment', args=[self.post.id]),
-            data=new_comment,
+            data=self.new_comment,
             follow=True,
         )
-        self.assertEqual(Comment.objects.count(), comment_count)
+        self.assertEqual(Comment.objects.count(), self.comment_count)
 
     def test_add_posts_comment(self):
         """Проверка добавления комментария к посту"""
-        comment_count = Comment.objects.count()
-        new_comment = {
-            'text': 'text-test',
-        }
         self.authorized_client.post(
             reverse('posts:add_comment', args=[self.post.id]),
-            data=new_comment,
+            data=self.new_comment,
             follow=True,
         )
-        self.assertEqual(Comment.objects.count(), comment_count + 1)
+        self.assertEqual(Comment.objects.count(), self.comment_count + 1)
 
 
 class CachePostsTest(TestCase):
