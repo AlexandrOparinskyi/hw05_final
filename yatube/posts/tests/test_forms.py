@@ -60,7 +60,7 @@ class PostFormTest(TestCase):
         )
         new_post = {
             'text': 'test-text add',
-            'group': '1',
+            'group': self.group.id,
             'image': uploaded,
         }
         response = self.authorized_client.post(
@@ -73,7 +73,7 @@ class PostFormTest(TestCase):
         self.assertTrue(
             Post.objects.filter(
                 text='test-text add',
-                group='1',
+                group=self.group.id,
                 image='posts/small.gif'
             ).exists()
         )
