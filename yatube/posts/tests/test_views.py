@@ -76,34 +76,14 @@ class PostPageTest(TestCase):
         for page in self.get_reverse_without_paginator:
             with self.subTest(page=page):
                 response = self.authorized_client.get(page)
-                self.assertEqual(
-                    response.context.get('post').group.title,
-                    'test-title'
-                )
-                self.assertEqual(
-                    response.context.get('post').group.slug,
-                    'test-slug'
-                )
-                self.assertEqual(
-                    response.context.get('post').group.description,
-                    'test-description'
-                )
-                self.assertEqual(
-                    response.context.get('post').author.username,
-                    'auth'
-                )
-                self.assertEqual(
-                    response.context.get('post').text,
-                    'test-text'
-                )
-                self.assertEqual(
-                    response.context.get('post').author,
-                    PostPageTest.user
-                )
-                self.assertEqual(
-                    response.context.get('post').group,
-                    PostPageTest.group
-                )
+                post = response.context.get('post')
+                self.assertEqual(post.group.title, 'test-title')
+                self.assertEqual(post.group.slug, 'test-slug')
+                self.assertEqual(post.group.description, 'test-description')
+                self.assertEqual(post.author.username, 'auth')
+                self.assertEqual(post.text, 'test-text')
+                self.assertEqual(post.author, self.user)
+                self.assertEqual(post.group, self.group)
 
     def test_create_post_correct_context(self):
         """Шаблон create_post сформирован с правильным контекстом."""
@@ -145,28 +125,31 @@ class TestPaginatorView(TestCase):
                 author=cls.user,
             ) for i in range(13)
         )
-        first_page: int = 10
-        second_page: int = 3
-        cls.paginator_page = {
-            reverse('posts:index'): first_page,
-            reverse('posts:index') + '?page=2': second_page,
-            reverse('posts:group_list', args=[cls.group.slug]): first_page,
-            reverse('posts:group_list', args=[cls.group.slug]) + '?page=2':
-                second_page,
-            reverse('posts:profile', args=[cls.user.username]): first_page,
-            reverse('posts:profile', args=[cls.user.username]) + '?page=2':
-                second_page,
-        }
+        cls.first_page: int = 10
+        cls.second_page: int = 3
+        cls.paginator = [
+            reverse('posts:index'),
+            reverse('posts:group_list', args=[cls.group.slug]),
+            reverse('posts:profile', args=[cls.user.username]),
+        ]
 
     def setUp(self):
         self.guest = Client()
 
-    def test_paginator_pages(self):
-        for page, count_post in self.paginator_page.items():
-            with self.subTest(count_post=count_post):
+    def test_paginator_first_page(self):
+        for page in self.paginator:
+            with self.subTest(page=page):
                 response = self.guest.get(page)
                 self.assertEqual(
-                    len(response.context['page_obj']), count_post
+                    len(response.context['page_obj']), self.first_page
+                )
+
+    def test_paginator_second_page(self):
+        for page in self.paginator:
+            with self.subTest(page=page):
+                response = self.guest.get(page + '?page=2')
+                self.assertEqual(
+                    len(response.context['page_obj']), self.second_page
                 )
 
 
